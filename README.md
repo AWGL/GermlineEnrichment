@@ -1,3 +1,5 @@
+NOTE: Working branch is version 2.5.2 currently on the cluster
+
 <h2>GermlineEnrichment</h2>
 <h3>Description</h3>
 <p>Diagnostic NGS pipeline for SNPs/Indels/CNVs/SVs/LOH from germline panel/exome data (Illumina paired-end)</p>
