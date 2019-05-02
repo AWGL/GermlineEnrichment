@@ -72,3 +72,32 @@
 </table>
 <p>A significant deviation from the expected ratios listed in the table above could indicate a bias resulting from artifactual variants.</p>
 <h5>Source: http://gatkforums.broadinstitute.org/gatk/discussion/6308/evaluating-the-quality-of-a-variant-callset</h5>
+
+<h3>Instructions</h3>
+<h3>To resume pipeline from script 2</h3>
+<h4>Delete all files in run folder except:</h4>
+<ul>
+  <li>Script 2</li>
+  <li>Script 2 error and output log files</li>
+  <li>Ped</li>
+  <li>BAMs.list</li>
+  <li>GVCFs.list</li>
+  <li>HighCoverageBams.list</li>
+  <li>Variables</li>
+ </ul>
+
+<h4>From individual sample folders delete:</h4>
+<ul>
+  <li>runid_samplename_cnv.txt</li>
+  <li>runid_samplename_cnv.vcf</li>
+  <li>runid_samplename_cnv.vcf.gz</li>
+  <li>runid_samplename_cnv.vcf.gz.tbi</li>
+  </ul>
+<p></p>
+Helper script: <i>for i in $(ls */ -d); do echo $i; rm $i/*cnv*; done</i>
+
+<h4>Requeue script 2:</h4>
+<i>qsub 2_GermlineEnrichment.sh -v version=pipeline_version</i>
+<p></p>
+e.g. for version 2.5.3 
+<i>qsub 2_GermlineEnrichment.sh -v version=2.5.3</i>
