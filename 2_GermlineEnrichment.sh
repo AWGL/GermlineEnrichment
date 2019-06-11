@@ -282,7 +282,7 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" ]] 
 
     # combine the decon and manta calls into a single file
     python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/create_cnv_report.py \
-        --gene_bed_file /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_cnv.bed \
+        --gene_bed_file /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
         --bam_list HighCoverageBams.list \
         --worksheet_id $seqId \
         --output sv_analysis/"$seqId"_cnvReport.csv
