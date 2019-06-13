@@ -200,23 +200,39 @@ with open(bam_list, newline='') as csvfile:
 		high_cov_sample_list.append(row[0].split('/')[0])
 
 # Open decon CSV as dataframe
-decon_df = pd.read_csv(decon_csv, sep='\t')
+try:
+	decon_df = pd.read_csv(decon_csv, sep='\t')
 
-# Change column names and add other columns that we need
-decon_df['correlation'] = decon_df['Correlation']
-decon_df['chromosome'] = decon_df['Chromosome']
-decon_df['start'] = decon_df['Start']
-decon_df['end'] = decon_df['End']
-decon_df['variant_type'] = decon_df['CNV.type']
-decon_df['variant_filter'] = 'PASS'
-decon_df['exons_affected'] = decon_df['N.exons']
-decon_df['gene'] = decon_df['Gene']
-decon_df['caller'] = 'decon'
-decon_df['sample_name'] = decon_df['Sample'].apply(lambda x: x.split('_')[-1])
-decon_df['decon_correlation'] = decon_df['Correlation']
-decon_df['n_affected_exons'] = decon_df['N.exons']
-decon_df['ref'] = 'NA'
-decon_df['alt'] = 'NA'
+	# Change column names and add other columns that we need
+	decon_df['correlation'] = decon_df['Correlation']
+	decon_df['chromosome'] = decon_df['Chromosome']
+	decon_df['start'] = decon_df['Start']
+	decon_df['end'] = decon_df['End']
+	decon_df['variant_type'] = decon_df['CNV.type']
+	decon_df['variant_filter'] = 'PASS'
+	decon_df['exons_affected'] = decon_df['N.exons']
+	decon_df['gene'] = decon_df['Gene']
+	decon_df['caller'] = 'decon'
+	decon_df['sample_name'] = decon_df['Sample'].apply(lambda x: x.split('_')[-1])
+	decon_df['decon_correlation'] = decon_df['Correlation']
+	decon_df['n_affected_exons'] = decon_df['N.exons']
+	decon_df['ref'] = 'NA'
+	decon_df['alt'] = 'NA'
+
+except FileNotFoundError:
+	decon_df = pd.DataFrame(columns =['sample_name',
+		'caller',
+		'chromosome',
+		'start',
+		'end',
+		'ref',
+		'variant_type',
+		'n_affected_exons',
+		'variant_filter',
+		'gene',
+		'decon_correlation' ] )
+	print ('Could not find CNV csv file - decon does not create file if no CNVs are called so ignoring problem.')
+
 
 # Get the list of manta vcfs to open and then create Manta df
 manta_vcfs = glob.glob(manta_path)
@@ -238,6 +254,8 @@ merged_df = manta_df.append(decon_df, sort=False)[['sample_name',
  'gene',
  'decon_correlation' ]]
 
+# Make sure we have at least one numeric column for the group command below
+merged_df['start'] = pd.to_numeric(merged_df['start'])
 
 # we need to add a row with NAs if a sample has not had any calls for that caller
 # For example if no manta calls add row like sample_name,manta,NA,NA etc.
