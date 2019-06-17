@@ -265,6 +265,19 @@ awk '$1 !~ /^MT/ { print $0 }' "$seqId"_filtered_annotated_roi.vcf > "$seqId"_fi
 -T 8 \
 -N
 
+## panel specific analyses
+if [ $panel == "IlluminaTruSightCancer" ]
+then
+    # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
+    echo "making hotspots bedfile"
+    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
+
+    # create a gaps & coverage files that are panel specific
+    echo "calculating custom coverage"
+    /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/getCustomCoverage.sh
+fi
+
+
 ### CNV analysis ###
 
 #check one or more samples have high coverage and then call CNVs
@@ -289,18 +302,6 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" ]] 
 
     source /home/transfer/miniconda3/bin/deactivate
 
-fi
-
-## panel specific analyses
-if [ $panel == "IlluminaTruSightCancer" ]
-then
-    # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
-    echo "making hotspots bedfile"
-    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
-
-    # create a gaps & coverage files that are panel specific
-    echo "calculating custom coverage"
-    /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/getCustomCoverage.sh
 fi
 
 
@@ -328,7 +329,7 @@ python /data/diagnostics/scripts/merge_qc_files.py .
 rm "$seqId"_variants.vcf "$seqId"_variants.vcf.idx "$seqId"_non_snps.vcf
 rm "$seqId"_snps.vcf "$seqId"_snps.vcf.idx "$seqId"_snps_filtered.vcf "$seqId"_snps_filtered.vcf.idx 
 rm "$seqId"_non_snps.vcf.idx "$seqId"_non_snps_filtered.vcf "$seqId"_non_snps_filtered.vcf.idx
-rm GVCFs.list igv.log BAMs.list variables
+rm GVCFs.list igv.log BAMs.list variables HighCoverageBams.list
 rm "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf.idx "$seqId"_variants_filtered_genotypes_filtered.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered.vcf.idx
