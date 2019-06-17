@@ -8,7 +8,7 @@ cd $PBS_O_WORKDIR
 #Description: Germline Enrichment Pipeline (Illumina paired-end). Not for use with other library preps/ experimental conditions.
 #Author: Matt Lyon, edited by Sara Rey & Christopher Medway, All Wales Medical Genetics Lab
 #Mode: BY_COHORT
-version="2.5.3"
+version="decon"
 
 # Script 2 runs in panel folder, requires final Bams, gVCFs and a PED file
 # Variant filtering assumes non-related samples. If familiy structures are known they MUST be provided in the PED file
@@ -296,7 +296,7 @@ if [ $panel == "IlluminaTruSightCancer" ]
 then
     # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
     echo "making hotspots bedfile"
-    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > /data/results/$seqId/$panel/IlluminaTruSightCancer_CustomROI_b37.bed
+    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
 
     # create a gaps & coverage files that are panel specific
     echo "calculating custom coverage"
@@ -320,7 +320,7 @@ THREAD_COUNT=8
 
 
 ### Generate Combined QC File ###
-python /data/diagnostics/scripts/merge_qc_files.py /data/results/$seqId/$panel/
+python /data/diagnostics/scripts/merge_qc_files.py .
 
 ### Clean up ###
 
