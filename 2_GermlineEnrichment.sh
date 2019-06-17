@@ -283,6 +283,8 @@ fi
 #check one or more samples have high coverage and then call CNVs
 if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" ]] && [[ $(wc -l "HighCoverageBams.list" | awk '{print $1}') -gt 4 ]]; then
 
+    #activate env and allow unset variables for conda
+    set +u 
     source /home/transfer/miniconda3/bin/activate germline_cnv
 
     # run_decon script to actually call the cnvs
@@ -300,8 +302,9 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" ]] 
         --worksheet_id $seqId \
         --output sv_analysis/"$seqId"_cnvReport.csv
 
+    #deactivate env and do not allow unset variables
     source /home/transfer/miniconda3/bin/deactivate
-
+    set -u 
 fi
 
 
