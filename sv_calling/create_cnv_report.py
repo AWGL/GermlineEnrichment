@@ -37,7 +37,7 @@ sample_depths = '*/*_DepthOfCoverage.sample_summary'
 
 # Useful Functions
 
-def create_manta_df(manta_vcfs):
+def create_manta_df(manta_vcfs, high_cov_sample_list):
 	"""
 	Loop through manta VCFs and create a dataframe.
 
@@ -197,7 +197,7 @@ high_cov_sample_list = []
 with open(bam_list, newline='') as csvfile:
 	spamreader = csv.reader(csvfile, delimiter=' ')
 	for row in spamreader:
-		high_cov_sample_list.append(row[0].split('/')[0])
+		high_cov_sample_list.append(row[0].split('/')[-2])
 
 # Open decon CSV as dataframe
 try:
@@ -236,7 +236,7 @@ except FileNotFoundError:
 
 # Get the list of manta vcfs to open and then create Manta df
 manta_vcfs = glob.glob(manta_path)
-manta_df = create_manta_df(manta_vcfs)
+manta_df = create_manta_df(manta_vcfs, high_cov_sample_list)
 
 # Get list of sample depth summary files to open
 sample_depths_files = glob.glob(sample_depths)

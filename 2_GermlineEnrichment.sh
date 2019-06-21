@@ -332,7 +332,7 @@ python /data/diagnostics/scripts/merge_qc_files.py .
 rm "$seqId"_variants.vcf "$seqId"_variants.vcf.idx "$seqId"_non_snps.vcf
 rm "$seqId"_snps.vcf "$seqId"_snps.vcf.idx "$seqId"_snps_filtered.vcf "$seqId"_snps_filtered.vcf.idx 
 rm "$seqId"_non_snps.vcf.idx "$seqId"_non_snps_filtered.vcf "$seqId"_non_snps_filtered.vcf.idx
-rm GVCFs.list igv.log BAMs.list variables HighCoverageBams.list
+rm GVCFs.list igv.log BAMs.list variables 
 rm "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf.idx "$seqId"_variants_filtered_genotypes_filtered.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered.vcf.idx

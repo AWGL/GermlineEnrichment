@@ -27,6 +27,7 @@ Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERS
 
 # Call CNVs using coverage data - make plots in plots directory.
 Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/makeCNVcalls.R \
+	--transProb 0.05 \
 	--Rdata sv_analysis/"$WORKSHEET".RData \
 	--out sv_analysis/"$WORKSHEET" -plot All --plotFolder sv_analysis/plots/
 
