@@ -4,6 +4,16 @@ from pysam import VariantFile
 import csv
 import argparse
 
+"""
+Run in run folder like:
+
+python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/create_cnv_report.py \
+        --gene_bed_file /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+        --bam_list HighCoverageBams.list \
+        --worksheet_id $seqId \
+        --output sv_analysis/"$seqId"_cnvReport.csv
+"""
+
 # Get arguments
 parser = argparse.ArgumentParser(
 	formatter_class=argparse.RawTextHelpFormatter,
