@@ -8,7 +8,7 @@ cd $PBS_O_WORKDIR
 #Description: Germline Enrichment Pipeline (Illumina paired-end). Not for use with other library preps/ experimental conditions.
 #Author: Matt Lyon, edited by Sara Rey & Christopher Medway, All Wales Medical Genetics Lab
 #Mode: BY_COHORT
-version="2.5.3"
+version="2.5.4"
 
 # Script 2 runs in panel folder, requires final Bams, gVCFs and a PED file
 # Variant filtering assumes non-related samples. If familiy structures are known they MUST be provided in the PED file
@@ -265,78 +265,46 @@ awk '$1 !~ /^MT/ { print $0 }' "$seqId"_filtered_annotated_roi.vcf > "$seqId"_fi
 -T 8 \
 -N
 
-### CNV analysis ###
-
-#check one or more samples have high coverage
-if [[ -e "HighCoverageBams.list" ]] && [[ $(wc -l "HighCoverageBams.list" | awk '{print $1}') -gt 4 ]]; then
-
-    #make CNV bed
-    /share/apps/bedtools-distros/bedtools-2.26.0/bin/bedtools slop \
-    -i /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37.bed \
-    -g /data/db/human/gatk/2.8/b37/human_g1k_v37.fasta.fai \
-    -b 250 | \
-    grep -v ^X| \
-    grep -v ^Y | \
-    grep -v ^MT | \
-    /share/apps/bedtools-distros/bedtools-2.26.0/bin/bedtools sort \
-    -faidx /data/db/human/gatk/2.8/b37/human_g1k_v37.fasta.fai | \
-    /share/apps/bedtools-distros/bedtools-2.26.0/bin/bedtools merge | \
-    /share/apps/bedtools-distros/bedtools-2.26.0/bin/bedtools subtract \
-    -A -a - -b /data/db/human/genomicSuperDups/genomicSuperDups_b37.bed.gz | \
-    awk -F"\t" '{print $1"\t"$2"\t"$3"\tr"NR}' > "$panel"_ROI_b37_CNV.bed
-
-    #call CNVs using read depth
-    /share/apps/R-distros/R-3.3.1/bin/Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/ExomeDepth.R \
-    -b HighCoverageBams.list \
-    -f /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
-    -r "$panel"_ROI_b37_CNV.bed \
-    2>&1 | tee ExomeDepth.log
-
-    #print ExomeDepth metrics
-    echo -e "BamPath\tFragments\tCorrelation" > "$seqId"_ExomeDepth_Metrics.txt
-    paste HighCoverageBams.list \
-    <(grep "Number of counted fragments" ExomeDepth.log | cut -d' ' -f6) \
-    <(grep "Correlation between reference and tests count" ExomeDepth.log | cut -d' ' -f8) >> "$seqId"_ExomeDepth_Metrics.txt
-
-    #add CNV vcf headers and move to sample folder
-    for vcf in $(ls *_cnv.vcf); do
-
-        prefix=$(echo "$vcf" | sed 's/\.vcf//g')
-        sampleId=$(/share/apps/bcftools-distros/bcftools-1.4.1/bcftools query -l "$vcf")
-
-        #add VCF headers
-        /share/apps/jre-distros/jre1.8.0_131/bin/java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx2g -jar /share/apps/picard-tools-distros/picard-tools-2.12.2/picard.jar UpdateVcfSequenceDictionary \
-        I="$vcf" \
-        O="$sampleId"/"$seqId"_"$sampleId"_cnv.vcf \
-        SD=/state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.dict
-
-        #gzip and tabix
-        /share/apps/htslib-distros/htslib-1.4.1/bgzip "$sampleId"/"$seqId"_"$sampleId"_cnv.vcf
-        /share/apps/htslib-distros/htslib-1.4.1/tabix -p vcf "$sampleId"/"$seqId"_"$sampleId"_cnv.vcf.gz
-
-    done
-
-    #move cnv metrics to sample folder
-    for i in $(ls *cnv.txt); do
-        mv "$i" $(echo "$i" | cut -d_ -f1)/"$seqId"_"$i";
-    done
-
-fi
-
 ## panel specific analyses
 if [ $panel == "IlluminaTruSightCancer" ]
 then
     # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
     echo "making hotspots bedfile"
-    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > /data/results/$seqId/$panel/IlluminaTruSightCancer_CustomROI_b37.bed
-
-    # generate combined CNV report
-    echo "making CNV Report"
-    /share/apps/anaconda2/bin/Rscript --vanilla /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/generateCnvReport.R $seqId $panel $version
+    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
 
     # create a gaps & coverage files that are panel specific
     echo "calculating custom coverage"
     /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/getCustomCoverage.sh
+fi
+
+
+### CNV analysis ###
+
+#check four or more samples have high coverage and then call CNVs
+if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" ||  $panel == "AgilentOGTFH" ]] && [[ $(wc -l "HighCoverageBams.list" | awk '{print $1}') -gt 4 ]]; then
+
+    #activate env and allow unset variables for conda
+    set +u 
+    source /home/transfer/miniconda3/bin/activate germline_cnv
+
+    # run_decon script to actually call the cnvs
+    bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon.sh \
+        /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+        HighCoverageBams.list \
+        /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+        $seqId \
+        $version
+
+    # combine the decon and manta calls into a single file
+    python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/create_cnv_report.py \
+        --gene_bed_file /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+        --bam_list HighCoverageBams.list \
+        --worksheet_id $seqId \
+        --output sv_analysis/"$seqId"_cnvReport.csv
+
+    #deactivate env and do not allow unset variables
+    source /home/transfer/miniconda3/bin/deactivate
+    set -u 
 fi
 
 
@@ -356,7 +324,7 @@ THREAD_COUNT=8
 
 
 ### Generate Combined QC File ###
-python /data/diagnostics/scripts/merge_qc_files.py /data/results/$seqId/$panel/
+python /data/diagnostics/scripts/merge_qc_files.py .
 
 ### Clean up ###
 
@@ -364,9 +332,9 @@ python /data/diagnostics/scripts/merge_qc_files.py /data/results/$seqId/$panel/
 rm "$seqId"_variants.vcf "$seqId"_variants.vcf.idx "$seqId"_non_snps.vcf
 rm "$seqId"_snps.vcf "$seqId"_snps.vcf.idx "$seqId"_snps_filtered.vcf "$seqId"_snps_filtered.vcf.idx 
 rm "$seqId"_non_snps.vcf.idx "$seqId"_non_snps_filtered.vcf "$seqId"_non_snps_filtered.vcf.idx
-rm GVCFs.list igv.log BAMs.list variables
+rm GVCFs.list igv.log BAMs.list variables 
 rm "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf.idx "$seqId"_variants_filtered_genotypes_filtered.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered.vcf.idx
 rm "$seqId"_variants_filtered.vcf "$seqId"_variants_filtered.vcf.idx
-rm -f ExomeDepth.log HighCoverageBams.list "$seqId"_*_cnv.vcf
+rm -f ExomeDepth.log "$seqId"_*_cnv.vcf
