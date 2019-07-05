@@ -8,7 +8,7 @@ set -euo pipefail
 # USE: bash inside run folder - will iterate over all samples. Depends on R script
 # calculateTargetCoverage.R (located in same folder).
 
-version="decon"
+version="2.5.4"
 
 RUN_DIR=$PWD
 
