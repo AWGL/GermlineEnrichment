@@ -243,9 +243,10 @@ annotateVCF "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_vari
 -dt NONE
 
 #restrict variants to ROI but retain overlapping indels
-/share/apps/bcftools-distros/bcftools-1.4.1/bcftools view \
+/share/apps/bcftools-distros/bcftools-1.8/bcftools view \
 -R /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37.bed \
-"$seqId"_filtered_annotated_padded.vcf.gz > "$seqId"_filtered_annotated_roi.vcf
+"$seqId"_filtered_annotated_padded.vcf.gz  | \
+/share/apps/bcftools-distros/bcftools-1.8/bcftools sort > "$seqId"_filtered_annotated_roi.vcf
 
 #validate final VCF
 /share/apps/jre-distros/jre1.8.0_131/bin/java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx4g -jar /share/apps/GATK-distros/GATK_3.8.0/GenomeAnalysisTK.jar \
@@ -337,4 +338,3 @@ rm "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_variants_filt
 rm "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf.idx "$seqId"_variants_filtered_genotypes_filtered.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered.vcf.idx
 rm "$seqId"_variants_filtered.vcf "$seqId"_variants_filtered.vcf.idx
-rm -f ExomeDepth.log "$seqId"_*_cnv.vcf
