@@ -279,6 +279,52 @@ then
 fi
 
 
+## panel specific analyses
+if [ $panel == "AgilentOGTFH" ]
+then
+    echo "Running FH specific Analysis"
+
+    source /home/transfer/miniconda3/bin/activate germline_enrichment_main
+
+    # Normalise and split multiallelics
+    cat "$seqId"_filtered_annotated_roi.vcf | vt decompose -s - | vt normalize -r /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta - > "$seqId"_filtered_annotated_roi_norm.vcf 
+
+    # Reannotate with vep
+
+    vep --verbose \
+        --format vcf \
+        --everything \
+        --fork 12 \
+        --species homo_sapiens \
+        --assembly GRCh37 \ 
+        --input_file "$seqId"_filtered_annotated_roi_norm.vcf   \
+        --output_file "$seqId"_filtered_annotated_roi_norm_vep.vcf  \
+        --force_overwrite \
+        --cache \
+        --dir  /share/data/db/human/vep_cache/refseq37 \
+        --fasta /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+        --offline \
+        --cache_version 94 \
+        --no_escape \
+        --shift_hgvs 1 \
+        --vcf \
+        --refseq \
+        --flag_pick \
+        --pick_order biotype,canonical,appris,tsl,ccds,rank,length \
+        --exclude_predicted \
+        --custom /share/data/db/human/gnomad/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz,gnomADg,vcf,exact,0,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH,AF_POPMAX \
+        --custom /share/data/db/human/gnomad/gnomad.exomes.r2.0.1.sites.vcf.gz,gnomADe,vcf,exact,0,AF_POPMAX \
+        --custom /share/data/db/human/SpliceAI/exome_spliceai_scores.vcf.gz,SpliceAI,vcf,exact,0,DS_AG,DS_AL,DS_DG,DS_DL,SYMBOL
+
+
+        echo "Creating FH Report"
+
+        # filter by bed
+        # report to csv
+
+fi
+
+
 ### CNV analysis ###
 
 #check four or more samples have high coverage and then call CNVs
@@ -288,13 +334,29 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
     set +u 
     source /home/transfer/miniconda3/bin/activate germline_cnv
 
-    # run_decon script to actually call the cnvs
-    bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon.sh \
-        /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
-        HighCoverageBams.list \
-        /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
-        $seqId \
-        $version
+
+    if [ $panel == "AgilentOGTFH" ]; then
+
+        # run_decon script to actually call the cnvs
+        bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon_hoo.sh \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+            HighCoverageBams.list \
+            /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+            $seqId \
+            $version
+
+    else 
+
+        # run_decon script to actually call the cnvs
+        bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon.sh \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+            HighCoverageBams.list \
+            /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+            $seqId \
+            $version
+
+    fi
+
 
     # combine the decon and manta calls into a single file
     python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/create_cnv_report.py \
@@ -306,6 +368,8 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
     #deactivate env and do not allow unset variables
     source /home/transfer/miniconda3/bin/deactivate
     set -u 
+
+
 fi
 
 

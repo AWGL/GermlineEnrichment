@@ -12,21 +12,21 @@ mkdir sv_analysis
 mkdir sv_analysis/plots
 
 # Take BAMs and generate coverage data for each exon/bin
-Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/ReadInBams.R \
+Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/sv_calling/ReadInBams.R \
 	--bams $BAM_LIST \
 	--bed $EXON_BED \
 	--fasta $FASTA \
 	--out sv_analysis/"$WORKSHEET"
 
 # Calculate QC stats and produce report showing failed samples and regions
-Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/IdentifyFailures.R \
+Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/sv_calling/IdentifyFailures.R \
 	--Rdata sv_analysis/"$WORKSHEET".RData \
 	--mincorr 0.98 \
 	--mincov 160 \
 	--out sv_analysis/"$WORKSHEET"
 
 # Call CNVs using coverage data - make plots in plots directory.
-Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/makeCNVcalls.R \
+Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/sv_calling/makeCNVcalls.R \
 	--transProb 0.05 \
 	--Rdata sv_analysis/"$WORKSHEET".RData \
 	--out sv_analysis/"$WORKSHEET" -plot All --plotFolder sv_analysis/plots/

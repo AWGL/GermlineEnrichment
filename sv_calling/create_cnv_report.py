@@ -40,7 +40,7 @@ bam_list = args.bam_list[0]
 worksheet_id = args.worksheet_id[0]
 output = args.output[0]
 
-decon_csv = f'sv_analysis/{worksheet_id}_all.txt'
+decon_csv = f'sv_analysis/{worksheet_id}*_all.txt'
 manta_path = '*/*_sv_filtered.vcf.gz'
 sample_depths = '*/*_DepthOfCoverage.sample_summary'
 
@@ -209,28 +209,13 @@ with open(bam_list, newline='') as csvfile:
 	for row in spamreader:
 		high_cov_sample_list.append(row[0].split('/')[-2])
 
-# Open decon CSV as dataframe
-try:
-	decon_df = pd.read_csv(decon_csv, sep='\t')
 
-	# Change column names and add other columns that we need
-	decon_df['correlation'] = decon_df['Correlation']
-	decon_df['chromosome'] = decon_df['Chromosome']
-	decon_df['start'] = decon_df['Start']
-	decon_df['end'] = decon_df['End']
-	decon_df['variant_type'] = decon_df['CNV.type']
-	decon_df['variant_filter'] = 'PASS'
-	decon_df['exons_affected'] = decon_df['N.exons']
-	decon_df['gene'] = decon_df['Gene']
-	decon_df['caller'] = 'decon'
-	decon_df['sample_name'] = decon_df['Sample'].apply(lambda x: x.split('_')[-1])
-	decon_df['decon_correlation'] = decon_df['Correlation']
-	decon_df['n_affected_exons'] = decon_df['N.exons']
-	decon_df['ref'] = 'NA'
-	decon_df['alt'] = 'NA'
+decon_csvs = glob.glob(decon_csv)
 
-except FileNotFoundError:
-	decon_df = pd.DataFrame(columns =['sample_name',
+
+if len(decon_csvs) == 0:
+
+	master_decon_csv = pd.DataFrame(columns =['sample_name',
 		'caller',
 		'chromosome',
 		'start',
@@ -244,6 +229,38 @@ except FileNotFoundError:
 	print ('Could not find CNV csv file - decon does not create file if no CNVs are called so ignoring problem.')
 
 
+# Open decon CSV as dataframe
+else:
+
+	master_decon_df = pd.DataFrame()
+
+	for decon_csv in decon_csvs:
+
+		print (decon_csv)
+
+		decon_df = pd.read_csv(decon_csv, sep='\t')
+		# Change column names and add other columns that we need
+		decon_df['correlation'] = decon_df['Correlation']
+		decon_df['chromosome'] = decon_df['Chromosome']
+		decon_df['start'] = decon_df['Start']
+		decon_df['end'] = decon_df['End']
+		decon_df['variant_type'] = decon_df['CNV.type']
+		decon_df['variant_filter'] = 'PASS'
+		decon_df['exons_affected'] = decon_df['N.exons']
+		decon_df['gene'] = decon_df['Gene']
+		decon_df['caller'] = 'decon'
+		decon_df['sample_name'] = decon_df['Sample'].apply(lambda x: x.split('_')[-1])
+		decon_df['decon_correlation'] = decon_df['Correlation']
+		decon_df['n_affected_exons'] = decon_df['N.exons']
+		decon_df['ref'] = 'NA'
+		decon_df['alt'] = 'NA'
+
+		master_decon_df = master_decon_df.append(decon_df)
+
+	master_decon_df = master_decon_df.drop_duplicates(['sample_name', 'start', 'end', 'variant_type'])
+
+print (master_decon_df)
+
 # Get the list of manta vcfs to open and then create Manta df
 manta_vcfs = glob.glob(manta_path)
 manta_df = create_manta_df(manta_vcfs, high_cov_sample_list)
@@ -252,7 +269,7 @@ manta_df = create_manta_df(manta_vcfs, high_cov_sample_list)
 sample_depths_files = glob.glob(sample_depths)
 
 # Merge the manta and decon dfs
-merged_df = manta_df.append(decon_df, sort=False)[['sample_name',
+merged_df = manta_df.append(master_decon_df, sort=False)[['sample_name',
  'caller',
  'chromosome',
  'start',
@@ -263,6 +280,8 @@ merged_df = manta_df.append(decon_df, sort=False)[['sample_name',
  'variant_filter',
  'gene',
  'decon_correlation' ]]
+
+
 
 # Make sure we have at least one numeric column for the group command below
 merged_df['start'] = pd.to_numeric(merged_df['start'])
@@ -313,6 +332,8 @@ additional_df = pd.DataFrame(additional_na, columns=['sample_name',
 
 # Merge merged df and additional df
 final_df = merged_df.append(additional_df, sort=False).sort_values('sample_name')
+
+
 
 # Read in gene df
 gene_df = pd.read_csv(gene_bed_file, sep='\t', names=['chrom', 'start', 'end', 'gene'])
