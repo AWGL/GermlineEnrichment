@@ -20,21 +20,21 @@ for i in $(cat $BAM_LIST); do
 	echo $COUNT
 
 	# Take BAMs and generate coverage data for each exon/bin
-	Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/ReadInBams.R \
+	Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/ReadInBams.R \
 		--bams sv_analysis/BAM_LIST_"$COUNT".txt \
 		--bed $EXON_BED \
 		--fasta $FASTA \
 		--out sv_analysis/"$WORKSHEET"_"$COUNT"
 
 	# Calculate QC stats and produce report showing failed samples and regions
-	Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/IdentifyFailures.R \
+	Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/IdentifyFailures.R \
 		--Rdata sv_analysis/"$WORKSHEET"_"$COUNT".RData \
 		--mincorr 0.98 \
 		--mincov 160 \
 		--out sv_analysis/"$WORKSHEET"_"$COUNT"
 
 	# Call CNVs using coverage data - make plots in plots directory.
-	Rscript /home/joseph/Documents/decon/GermlineEnrichment/sv_calling/makeCNVcalls.R \
+	Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/makeCNVcalls.R \
 		--transProb 0.05 \
 		--Rdata sv_analysis/"$WORKSHEET"_"$COUNT".RData \
 		--out sv_analysis/"$WORKSHEET"_"$COUNT" -plot All --plotFolder sv_analysis/plots/

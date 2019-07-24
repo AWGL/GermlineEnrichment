@@ -284,6 +284,7 @@ if [ $panel == "AgilentOGTFH" ]
 then
     echo "Running FH specific Analysis"
 
+    set +u 
     source /home/transfer/miniconda3/bin/activate germline_enrichment_main
 
     # Normalise and split multiallelics
@@ -295,8 +296,7 @@ then
         --format vcf \
         --everything \
         --fork 12 \
-        --species homo_sapiens \
-        --assembly GRCh37 \ 
+        --species homo_sapiens --assembly GRCh37 \
         --input_file "$seqId"_filtered_annotated_roi_norm.vcf   \
         --output_file "$seqId"_filtered_annotated_roi_norm_vep.vcf  \
         --force_overwrite \
@@ -319,8 +319,36 @@ then
 
         echo "Creating FH Report"
 
+        bgzip "$seqId"_filtered_annotated_roi_norm_vep.vcf
+        tabix "$seqId"_filtered_annotated_roi_norm_vep.vcf.gz
+
         # filter by bed
+        bcftools view \
+        -R /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_Custom.bed \
+        "$seqId"_filtered_annotated_roi_norm_vep.vcf.gz  | \
+        bcftools sort > "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf
+
         # report to csv
+
+        for sample in $(bcftools query -l "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf); do
+
+            worklist=$(grep "worklistId=" "$sample"/"$sample".variables | sed 's/worklistId=//' | sed 's/"//g')
+
+            python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/fh_reporter.py  \
+            --vcf "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf \
+            --sample_id "$sample" \
+            --output "$sample"/"$seqId"_"$sample" \
+            --worklist_id $worklist \
+            --gnomad_max_af 0.05 
+
+
+        done 
+
+
+
+
+        source /home/transfer/miniconda3/bin/deactivate
+        set -u 
 
 fi
 
