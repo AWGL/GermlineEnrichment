@@ -21,6 +21,8 @@ Software:
 - pandas
 - pyvariantfilter
 
+TODO - Add quality filter for initial import!
+
 """
 
 
@@ -45,49 +47,64 @@ args = parser.parse_args()
 
 # Utility Functions
 
-def passes_filter(variant, proband_id):
-    """
-    Filter variants from the VCF.
-    
-    We import if the variant passes quality filtering and is below 1% in gnomad exomes and gnomad genomes AND
+def passes_initial_filter(variant, proband_id):
+	"""
+	Filter variants from the VCF.
+	
+	We import if the variant passes quality filtering.
   
-    
-    """
-    # If the proband has the variant and we pass the genotype and variant level filters
-    if variant.has_alt(proband_id) and variant.passes_gt_filter(proband_id, min_gq=20) and variant.passes_filter():
-        
-        
-        # The filter_on_numerical_transcript_annotation_lte() function allows us to filter on numerical values 
-        # we can set different cutoffs for different variant types. For example ad_het is variants in which the 
-        # proband is heterozygous on an autosome. In this case we get two boolean values describing whether the 
-        # variant is below 1% in the gnomad genomes and gnomad exomes datasets.
-        freq_filterg = variant.filter_on_numerical_transcript_annotation_lte(annotation_key='gnomADg_AF_POPMAX',
-                                                                                          ad_het=gnomad_max_af,
-                                                                                          ad_hom_alt=gnomad_max_af,
-                                                                                          x_male =gnomad_max_af,
-                                                                                          x_female_het=gnomad_max_af,
-                                                                                          x_female_hom=gnomad_max_af,
-                                                                                          compound_het=gnomad_max_af,
-                                                                                          y=gnomad_max_af,
-                                                                                          mt=gnomad_max_af,
-                                                                                          )
-        freq_filtere = variant.filter_on_numerical_transcript_annotation_lte(annotation_key='gnomADe_AF_POPMAX',
-                                                                                          ad_het=gnomad_max_af,
-                                                                                          ad_hom_alt=gnomad_max_af,
-                                                                                          x_male =gnomad_max_af,
-                                                                                          x_female_het=gnomad_max_af,
-                                                                                          x_female_hom=gnomad_max_af,
-                                                                                          compound_het=gnomad_max_af,
-                                                                                          y=gnomad_max_af,
-                                                                                          mt=gnomad_max_af,
-                                                                                          )  
-        
-        
-        if freq_filtere and freq_filterg:
+	"""
+	if variant.has_alt(proband_id) and variant.passes_gt_filter(proband_id, min_gq=20) and variant.passes_filter():
+		
+		return True
+		
+	return False
 
-        	return True
-        
-    return False
+
+
+def passes_final_filter(variant, proband_id):
+	"""
+	Filter variants from the VCF.
+	
+	We import if the variant passes quality filtering and is below 1% in gnomad exomes and gnomad genomes.
+	
+	"""
+
+	# If the proband has the variant and we pass the genotype and variant level filters
+	if variant.has_alt(proband_id) and variant.passes_gt_filter(proband_id, min_gq=20) and variant.passes_filter():
+		
+		
+		# The filter_on_numerical_transcript_annotation_lte() function allows us to filter on numerical values 
+		# we can set different cutoffs for different variant types. For example ad_het is variants in which the 
+		# proband is heterozygous on an autosome. In this case we get two boolean values describing whether the 
+		# variant is below 1% in the gnomad genomes and gnomad exomes datasets.
+		freq_filterg = variant.filter_on_numerical_transcript_annotation_lte(annotation_key='gnomADg_AF_POPMAX',
+																						  ad_het=gnomad_max_af,
+																						  ad_hom_alt=gnomad_max_af,
+																						  x_male =gnomad_max_af,
+																						  x_female_het=gnomad_max_af,
+																						  x_female_hom=gnomad_max_af,
+																						  compound_het=gnomad_max_af,
+																						  y=gnomad_max_af,
+																						  mt=gnomad_max_af,
+																						  )
+		freq_filtere = variant.filter_on_numerical_transcript_annotation_lte(annotation_key='gnomADe_AF_POPMAX',
+																						  ad_het=gnomad_max_af,
+																						  ad_hom_alt=gnomad_max_af,
+																						  x_male =gnomad_max_af,
+																						  x_female_het=gnomad_max_af,
+																						  x_female_hom=gnomad_max_af,
+																						  compound_het=gnomad_max_af,
+																						  y=gnomad_max_af,
+																						  mt=gnomad_max_af,
+																						  )  
+		
+		
+		if freq_filtere and freq_filterg:
+
+			return True
+		
+	return False
 
 
 
@@ -112,7 +129,10 @@ my_variant_set = VariantSet()
 my_variant_set.add_family(my_family)
 
 # Read in variants from vcf
-my_variant_set.read_variants_from_vcf(vcf, proband_variants_only=True)
+my_variant_set.read_variants_from_vcf(vcf,
+ 									proband_variants_only=True,
+									filter_func=passes_initial_filter,
+									args=(proband.get_id(),))
 
 # Convert to dataframe
 df_unfiltered = my_variant_set.to_df()
@@ -184,7 +204,7 @@ else:
 
 
 # Now filter and write to csv
-my_variant_set.filter_variants(passes_filter, args=(sample_id,))
+my_variant_set.filter_variants(passes_final_filter, args=(sample_id,))
 
 df_filtered = my_variant_set.to_df()
 

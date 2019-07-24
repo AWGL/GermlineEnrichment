@@ -365,7 +365,7 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
 
     if [ $panel == "AgilentOGTFH" ]; then
 
-        # run_decon script to actually call the cnvs
+        # run_decon script to call cnvs - for FH we hoo (Hold One Out) during the analysis
         bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon_hoo.sh \
             /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
             HighCoverageBams.list \
