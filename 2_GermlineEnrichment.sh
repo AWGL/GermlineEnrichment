@@ -337,7 +337,7 @@ then
             python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/fh_reporter.py  \
             --vcf "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf \
             --sample_id "$sample" \
-            --output "$sample"/"$seqId"_"$sample" \
+            --output "$sample"/"$seqId"_"$sample"_FH_VariantReport \
             --worklist_id $worklist \
             --gnomad_max_af 0.05 
 
