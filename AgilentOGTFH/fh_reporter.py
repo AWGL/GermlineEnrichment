@@ -77,7 +77,7 @@ def passes_final_filter(variant, proband_id):
 		# The filter_on_numerical_transcript_annotation_lte() function allows us to filter on numerical values 
 		# we can set different cutoffs for different variant types. For example ad_het is variants in which the 
 		# proband is heterozygous on an autosome. In this case we get two boolean values describing whether the 
-		# variant is below 1% in the gnomad genomes and gnomad exomes datasets.
+		# variant is below x% in the gnomad genomes and gnomad exomes datasets.
 		freq_filterg = variant.filter_on_numerical_transcript_annotation_lte(annotation_key='gnomADg_AF_POPMAX',
 																						  ad_het=gnomad_max_af,
 																						  ad_hom_alt=gnomad_max_af,
