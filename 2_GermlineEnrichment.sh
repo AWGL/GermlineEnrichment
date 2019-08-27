@@ -267,11 +267,11 @@ awk '$1 !~ /^MT/ { print $0 }' "$seqId"_filtered_annotated_roi.vcf > "$seqId"_fi
 -N
 
 ## panel specific analyses
-if [ $panel == "IlluminaTruSightCancer" ]
+if [[ $panel == "IlluminaTruSightCancer" ||  $panel == "AgilentOGTFH" ]]
 then
     # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
     echo "making hotspots bedfile"
-    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
+    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > "$panel"_CustomROI_b37.bed
 
     # create a gaps & coverage files that are panel specific
     echo "calculating custom coverage"
