@@ -243,9 +243,10 @@ annotateVCF "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_vari
 -dt NONE
 
 #restrict variants to ROI but retain overlapping indels
-/share/apps/bcftools-distros/bcftools-1.4.1/bcftools view \
+/share/apps/bcftools-distros/bcftools-1.8/bcftools view \
 -R /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37.bed \
-"$seqId"_filtered_annotated_padded.vcf.gz > "$seqId"_filtered_annotated_roi.vcf
+"$seqId"_filtered_annotated_padded.vcf.gz  | \
+/share/apps/bcftools-distros/bcftools-1.8/bcftools sort > "$seqId"_filtered_annotated_roi.vcf
 
 #validate final VCF
 /share/apps/jre-distros/jre1.8.0_131/bin/java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx4g -jar /share/apps/GATK-distros/GATK_3.8.0/GenomeAnalysisTK.jar \
@@ -266,15 +267,89 @@ awk '$1 !~ /^MT/ { print $0 }' "$seqId"_filtered_annotated_roi.vcf > "$seqId"_fi
 -N
 
 ## panel specific analyses
-if [ $panel == "IlluminaTruSightCancer" ]
+if [[ $panel == "IlluminaTruSightCancer" ||  $panel == "AgilentOGTFH" ]]
 then
     # generate single bedfile from gene beds in order to enable custom reporting of gaps and coverage for TSC panel
     echo "making hotspots bedfile"
-    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/IlluminaTruSightCancer/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > IlluminaTruSightCancer_CustomROI_b37.bed
+    cat /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/hotspot_coverage/*.bed | sort -k1,1 -k2,2n > "$panel"_CustomROI_b37.bed
 
     # create a gaps & coverage files that are panel specific
     echo "calculating custom coverage"
     /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/getCustomCoverage.sh
+fi
+
+
+## panel specific analyses
+if [ $panel == "AgilentOGTFH" ]
+then
+    echo "Running FH specific Analysis"
+
+    set +u 
+    source /home/transfer/miniconda3/bin/activate germline_enrichment_main
+
+    # Normalise and split multiallelics
+    cat "$seqId"_filtered_annotated_roi.vcf | vt decompose -s - | vt normalize -r /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta - > "$seqId"_filtered_annotated_roi_norm.vcf 
+
+    # Reannotate with vep
+
+    vep --verbose \
+        --format vcf \
+        --everything \
+        --fork 12 \
+        --species homo_sapiens --assembly GRCh37 \
+        --input_file "$seqId"_filtered_annotated_roi_norm.vcf   \
+        --output_file "$seqId"_filtered_annotated_roi_norm_vep.vcf  \
+        --force_overwrite \
+        --cache \
+        --dir  /share/data/db/human/vep_cache/refseq37 \
+        --fasta /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+        --offline \
+        --cache_version 94 \
+        --no_escape \
+        --shift_hgvs 1 \
+        --vcf \
+        --refseq \
+        --flag_pick \
+        --pick_order biotype,canonical,appris,tsl,ccds,rank,length \
+        --exclude_predicted \
+        --custom /share/data/db/human/gnomad/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz,gnomADg,vcf,exact,0,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH,AF_POPMAX \
+        --custom /share/data/db/human/gnomad/gnomad.exomes.r2.0.1.sites.vcf.gz,gnomADe,vcf,exact,0,AF_POPMAX \
+        --custom /share/data/db/human/SpliceAI/exome_spliceai_scores.vcf.gz,SpliceAI,vcf,exact,0,DS_AG,DS_AL,DS_DG,DS_DL,SYMBOL
+
+
+        echo "Creating FH Report"
+
+        bgzip "$seqId"_filtered_annotated_roi_norm_vep.vcf
+        tabix "$seqId"_filtered_annotated_roi_norm_vep.vcf.gz
+
+        # filter by bed
+        bcftools view \
+        -R /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_Custom.bed \
+        "$seqId"_filtered_annotated_roi_norm_vep.vcf.gz  | \
+        bcftools sort > "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf
+
+        # report to csv
+
+        for sample in $(bcftools query -l "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf); do
+
+            worklist=$(grep "worklistId=" "$sample"/"$sample".variables | sed 's/worklistId=//' | sed 's/"//g')
+
+            python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/fh_reporter.py  \
+            --vcf "$seqId"_filtered_annotated_roi_norm_vep_custom_fh.vcf \
+            --sample_id "$sample" \
+            --output "$sample"/"$seqId"_"$sample"_FH_VariantReport \
+            --worklist_id $worklist \
+            --gnomad_max_af 0.05 
+
+
+        done 
+
+
+
+
+        source /home/transfer/miniconda3/bin/deactivate
+        set -u 
+
 fi
 
 
@@ -287,13 +362,29 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
     set +u 
     source /home/transfer/miniconda3/bin/activate germline_cnv
 
-    # run_decon script to actually call the cnvs
-    bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon.sh \
-        /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
-        HighCoverageBams.list \
-        /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
-        $seqId \
-        $version
+
+    if [ $panel == "AgilentOGTFH" ]; then
+
+        # run_decon script to call cnvs - for FH we hoo (Hold One Out) during the analysis
+        bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon_hoo.sh \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+            HighCoverageBams.list \
+            /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+            $seqId \
+            $version
+
+    else 
+
+        # run_decon script to actually call the cnvs
+        bash /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/run_decon.sh \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV.bed \
+            HighCoverageBams.list \
+            /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+            $seqId \
+            $version
+
+    fi
+
 
     # combine the decon and manta calls into a single file
     python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/sv_calling/create_cnv_report.py \
@@ -305,6 +396,8 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
     #deactivate env and do not allow unset variables
     source /home/transfer/miniconda3/bin/deactivate
     set -u 
+
+
 fi
 
 
@@ -337,4 +430,3 @@ rm "$seqId"_variants_filtered_genotypes_filtered_meta.vcf "$seqId"_variants_filt
 rm "$seqId"_variants_filtered_genotypes_filtered_meta_vep.vcf.idx "$seqId"_variants_filtered_genotypes_filtered.vcf
 rm "$seqId"_variants_filtered_genotypes_filtered.vcf.idx
 rm "$seqId"_variants_filtered.vcf "$seqId"_variants_filtered.vcf.idx
-rm -f ExomeDepth.log "$seqId"_*_cnv.vcf
