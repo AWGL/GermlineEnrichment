@@ -6,6 +6,7 @@ BAM_LIST=$2 # List of BAMs to process
 FASTA=$3 # The FASTA used BAMs were aligned to
 WORKSHEET=$4 # Worksheet ID - used for naming output
 VERSION=$5 # The pipeline version
+CUSTOM=$6 # The file with the exon numbers
 
 #Make directories for storing data
 mkdir sv_analysis
@@ -31,13 +32,17 @@ for i in $(cat $BAM_LIST); do
 		--Rdata sv_analysis/"$WORKSHEET"_"$COUNT".RData \
 		--mincorr 0.98 \
 		--mincov 160 \
-		--out sv_analysis/"$WORKSHEET"_"$COUNT"
+		--out sv_analysis/"$WORKSHEET"_"$COUNT" \
+		--exons $CUSTOM \
+		--custom TRUE
 
 	# Call CNVs using coverage data - make plots in plots directory.
 	Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/makeCNVcalls.R \
 		--transProb 0.05 \
 		--Rdata sv_analysis/"$WORKSHEET"_"$COUNT".RData \
-		--out sv_analysis/"$WORKSHEET"_"$COUNT" -plot All --plotFolder sv_analysis/plots/
+		--out sv_analysis/"$WORKSHEET"_"$COUNT" -plot All --plotFolder sv_analysis/plots/ \
+		--exons $CUSTOM \
+		--custom TRUE
 
 	# Remove files no longer needed
 	rm sv_analysis/"$WORKSHEET"_"$COUNT".RData
