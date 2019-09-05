@@ -40,9 +40,9 @@ bam_list = args.bam_list[0]
 worksheet_id = args.worksheet_id[0]
 output = args.output[0]
 
-decon_csv = f'old/{worksheet_id}*_all.txt'
-manta_path = 'AgilentOGTFH/*/*_sv_filtered.vcf.gz'
-sample_depths = 'AgilentOGTFH/*/*_DepthOfCoverage.sample_summary'
+decon_csv = f'sv_analysis/{worksheet_id}*_all.txt'
+manta_path = '*/*_sv_filtered.vcf.gz'
+sample_depths = '*/*_DepthOfCoverage.sample_summary'
 
 
 # Useful Functions
