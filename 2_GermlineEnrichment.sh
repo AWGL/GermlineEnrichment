@@ -371,7 +371,8 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
             HighCoverageBams.list \
             /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
             $seqId \
-            $version
+            $version \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV_exons.bed
 
     else 
 

@@ -34,7 +34,7 @@ for i in $(cat $BAM_LIST); do
 		--mincov 160 \
 		--out sv_analysis/"$WORKSHEET"_"$COUNT" \
 		--exons $CUSTOM \
-		--custom TRUE
+		--custom FALSE
 
 	# Call CNVs using coverage data - make plots in plots directory.
 	Rscript /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$VERSION"/sv_calling/makeCNVcalls.R \
@@ -42,7 +42,7 @@ for i in $(cat $BAM_LIST); do
 		--Rdata sv_analysis/"$WORKSHEET"_"$COUNT".RData \
 		--out sv_analysis/"$WORKSHEET"_"$COUNT" -plot All --plotFolder sv_analysis/plots/ \
 		--exons $CUSTOM \
-		--custom TRUE
+		--custom FALSE
 
 	# Remove files no longer needed
 	rm sv_analysis/"$WORKSHEET"_"$COUNT".RData
