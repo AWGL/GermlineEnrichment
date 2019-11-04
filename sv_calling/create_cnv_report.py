@@ -215,7 +215,7 @@ decon_csvs = glob.glob(decon_csv)
 
 if len(decon_csvs) == 0:
 
-	master_decon_csv = pd.DataFrame(columns =['sample_name',
+	master_decon_df = pd.DataFrame(columns =['sample_name',
 		'caller',
 		'chromosome',
 		'start',
