@@ -74,7 +74,7 @@ def create_manta_df(manta_vcfs, high_cov_sample_list):
 				sv_type = rec.info['SVTYPE']
 				sv_filter = ';'.join(rec.filter.keys())
 
-				manta_list.append([sample_name, 'manta', chrom, start, end, ref, alt, sv_type, '-', sv_filter, 'NA'])
+				manta_list.append([sample_name, 'manta', chrom, start, end, ref, alt, sv_type, '-', sv_filter, 'NA', 'NA', 'NA'])
 			
 			
 	manta_df = pd.DataFrame(manta_list, columns=['sample_name',
@@ -87,7 +87,9 @@ def create_manta_df(manta_vcfs, high_cov_sample_list):
 												 'variant_type',
 												 'n_affected_exons',
 												 'variant_filter',
-												 'decon_correlation'])
+												 'decon_correlation',
+												 'exon_start',
+												 'exon_end'])
 	
 	return manta_df
 
@@ -225,7 +227,9 @@ if len(decon_csvs) == 0:
 		'n_affected_exons',
 		'variant_filter',
 		'gene',
-		'decon_correlation' ] )
+		'decon_correlation',
+		'exon_start',
+		'exon_end' ] )
 	print ('Could not find CNV csv file - decon does not create file if no CNVs are called so ignoring problem.')
 
 
@@ -236,9 +240,7 @@ else:
 
 	for decon_csv in decon_csvs:
 
-		print (decon_csv)
-
-		decon_df = pd.read_csv(decon_csv, sep='\t')
+		decon_df = pd.read_csv(decon_csv, sep='\t', na_filter = False)
 		# Change column names and add other columns that we need
 		decon_df['correlation'] = decon_df['Correlation']
 		decon_df['chromosome'] = decon_df['Chromosome']
@@ -255,11 +257,20 @@ else:
 		decon_df['ref'] = 'NA'
 		decon_df['alt'] = 'NA'
 
+
+		if 'Custom.first' in decon_df.columns:
+
+			decon_df['exon_start'] = decon_df['Custom.first']
+			decon_df['exon_end'] = decon_df['Custom.last']
+
+		else:
+
+			decon_df['exon_start'] = 'NA'
+			decon_df['exon_end'] = 'NA'
+
 		master_decon_df = master_decon_df.append(decon_df)
 
 	master_decon_df = master_decon_df.drop_duplicates(['sample_name', 'start', 'end', 'variant_type'])
-
-print (master_decon_df)
 
 # Get the list of manta vcfs to open and then create Manta df
 manta_vcfs = glob.glob(manta_path)
@@ -275,11 +286,14 @@ merged_df = manta_df.append(master_decon_df, sort=False)[['sample_name',
  'start',
  'end',
  'ref',
+ 'alt',
  'variant_type',
  'n_affected_exons',
  'variant_filter',
  'gene',
- 'decon_correlation' ]]
+ 'decon_correlation',
+ 'exon_start',
+ 'exon_end',]]
 
 
 
@@ -312,11 +326,11 @@ for sample in high_cov_sample_list:
     
     if sample not in manta_calls:
         
-        additional_na.append([sample, 'manta', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'])
+        additional_na.append([sample, 'manta', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'])
         
     if sample not in decon_calls:
         
-        additional_na.append([sample, 'decon', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'])
+        additional_na.append([sample, 'decon', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'])
         
 additional_df = pd.DataFrame(additional_na, columns=['sample_name',
                                                  'caller',
@@ -328,7 +342,9 @@ additional_df = pd.DataFrame(additional_na, columns=['sample_name',
                                                  'variant_type',
                                                  'n_affected_exons',
                                                  'variant_filter',
-                                                 'decon_correlation'])
+                                                 'decon_correlation',
+                                                 'exon_start',
+                                                 'exon_end'])
 
 # Merge merged df and additional df
 final_df = merged_df.append(additional_df, sort=False).sort_values('sample_name')
@@ -373,4 +389,6 @@ final_df[['sample_name',
  'variant_filter',
  'sample_filter',
  'sample_depth',
- 'gene']].to_csv(output, index=False, sep=',')
+ 'gene',
+ 'exon_start',
+ 'exon_end']].to_csv(output, index=False, sep=',')

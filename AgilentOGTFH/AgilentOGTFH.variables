@@ -3,4 +3,4 @@ read2Adapter=AGATCGGAAGAGCGTCGTGTAGGG #read 2 adapter to trim
 minimumCoverage=20 # for passing regions. Need to determine during clinical validation
 includeBQSR=false #recalibrate base quality scores. Requires >100M bases ontarget
 expectedInsertSize=300 #insert size
-mqRankSum=-12.5 #The MQRankSum value to filter SNPs on
+mqRankSum=-22.0 #The MQRankSum value to filter SNPs on

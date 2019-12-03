@@ -8,7 +8,7 @@ cd $PBS_O_WORKDIR
 #Description: Germline Enrichment Pipeline (Illumina paired-end). Not for use with other library preps/ experimental conditions.
 #Author: Matt Lyon, edited by Sara Rey & Christopher Medway, All Wales Medical Genetics Lab
 #Mode: BY_COHORT
-version="2.5.4"
+version="2.5.5"
 
 # Script 2 runs in panel folder, requires final Bams, gVCFs and a PED file
 # Variant filtering assumes non-related samples. If familiy structures are known they MUST be provided in the PED file
@@ -371,7 +371,8 @@ if [[ -e "HighCoverageBams.list" ]] && [[ $panel == "IlluminaTruSightCancer" || 
             HighCoverageBams.list \
             /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
             $seqId \
-            $version
+            $version \
+            /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37_CNV_exons.bed
 
     else 
 
