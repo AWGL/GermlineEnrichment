@@ -1,7 +1,7 @@
 """
 A script to calculate a Polygenic Risk Score (PRS) for the FH assay
 
-See - https://www.ncbi.nlm.nih.gov/pubmed/23433573 for info on how calculation works.
+See - https://www.ncbi.nlm.nih.gov/pubmed/23433573 (talmud 2013) for info on how calculation works.
 
 Usage:
 
@@ -358,4 +358,4 @@ with open(args.output_name[0] + '_prs_score.csv', mode='w') as prs_score:
 
 	prs_writer = csv.writer(prs_score, delimiter='\t')
 	prs_writer.writerow(['score', 'decile', 'decile_description', 'qc'])
-	prs_writer.writerow([final_score, decile, decile_description, prs_snps_qc ])
+	prs_writer.writerow([round(final_score,5), decile, decile_description, prs_snps_qc ])
