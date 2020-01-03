@@ -470,9 +470,10 @@ then
     platypus callVariants \
     --refFile=/state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
     --bamFiles="$seqId"_"$sampleId".bam \
-    --source=/data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snps.gz \
+    --source=/data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snps.vcf.gz \
     --getVariantsFromBAMs=0 \
     --output="$seqId"_"$sampleId"_snps.vcf \
+    --regions=/data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37.bed \
     --minPosterior=0
 
     # fix platypus header so we can decompose correctly
@@ -485,11 +486,9 @@ then
     cat "$seqId"_"$sampleId"_snps_fixed.vcf | vt decompose -s - > "$seqId"_"$sampleId"_snps_fixed_decomposed.vcf
 
     # convert to table with gatk
-
-
     gatk VariantsToTable \
     -V "$seqId"_"$sampleId"_snps_fixed_decomposed.vcf \
-    -O "$seqId"_"$sampleId"_snps.csv \
+    -O "$seqId"_"$sampleId"_snps_fixed_decomposed.csv \
     -F CHROM -F POS -F REF -F ALT -F ID -GF GT -GF NR -GF NV -GF GQ \
     --show-filtered true
 
@@ -497,8 +496,8 @@ then
 
     source /home/transfer/miniconda3/bin/activate fh_prs
 
-    python calculate_prs.py \
-    --genotypes "$seqId"_"$sampleId"_snps.csv \
+    python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/fh_calculate_prs.py \
+    --genotypes "$seqId"_"$sampleId"_snps_fixed_decomposed.csv \
     --annotations /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snp_annotations.yaml \
     --output_name "$seqId"_"$sampleId" \
     --sample_id "$sampleId"
@@ -509,7 +508,7 @@ then
     # clean up
     rm "$seqId"_"$sampleId"_snps_fixed.vcf
     rm "$seqId"_"$sampleId"_snps.vcf
-    rm "$seqId"_"$sampleId"_snps.csv
+    rm "$seqId"_"$sampleId"_snps_fixed_decomposed.csv 
 
 fi
 

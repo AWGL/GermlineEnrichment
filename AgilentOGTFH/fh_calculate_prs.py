@@ -1,8 +1,27 @@
 """
-A script to calculate a Polygenic risk score based for the FH assay
+A script to calculate a Polygenic Risk Score (PRS) for the FH assay
+
+See - https://www.ncbi.nlm.nih.gov/pubmed/23433573 for info on how calculation works.
+
+Usage:
+
+python fh_calculate_prs.py \
+--genotypes "$seqId"_"$sampleId"_snps_fixed_decomposed.csv \
+--annotations /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snp_annotations.yaml \
+--output_name "$seqId"_"$sampleId" \
+--sample_id "$sampleId"
 
 Input:
+--genotypes - csv file containing the genotypes of the snps
+--annotations - yaml config file with weights etc
+--output_name - what to call the output
+--sample_id - sample id
 
+Output:
+
+*_snps.csv - csv file containing all the genotyped snps and their annotations
+*_snps_prs.csv - csv file containing just the snps used for the PRS
+*_prs_score.csv - csv file containing the PRS score and which decile the sample falls in.
 
 
 """
