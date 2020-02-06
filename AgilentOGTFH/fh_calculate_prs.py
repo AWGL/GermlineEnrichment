@@ -269,93 +269,100 @@ genotype_df = pd.read_csv(args.genotypes[0], sep='\t')
 # YAML file containing the annotations such as rs number, weights etc.
 snp_info_dict = parse_config(args.annotations[0])
 
-# Add annotations
-genotype_df['snp_id'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'id',))
-genotype_df['reason'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'reason',))
-genotype_df['gene'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'gene',))
-genotype_df['is_prs'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'is_prs',))
-genotype_df['is_apoe_snp'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'is_apoe_snp',))
-genotype_df['reference_reads'] = genotype_df[f'{sample_id}.NR'] - genotype_df[f'{sample_id}.NV']
-genotype_df['alt_reads'] = genotype_df[f'{sample_id}.NV']
-genotype_df['qc'] = genotype_df.apply(check_qc, axis=1,args=(min_depth, min_gq, sample_id))
 
-# Save all SNPs to CSV for viewing by user
-genotype_df[['CHROM',
- 'POS',
- 'REF',
- 'ALT',
- 'snp_id',
- 'gene',
-  f'{sample_id}.GT',
-  f'{sample_id}.GQ',
-  'qc',
-  'reference_reads',
-  'alt_reads',
-  'reason']].to_csv(args.output_name[0] + '_snps.csv', sep='\t', index=False)
+if genotype_df.shape[0] == 0:
 
-
-# get snps for PRS but exclude those in APOE as they are treated differently
-snps_for_prs_non_apoe = genotype_df[(genotype_df['is_prs']==True) & (genotype_df['is_apoe_snp']==False)]
-
-# Annotate the prs snps
-snps_for_prs_non_apoe['risk_allele'] = snps_for_prs_non_apoe.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'risk_allele'))
-snps_for_prs_non_apoe['prs_weight'] = snps_for_prs_non_apoe.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'weight'))
-
-
-# Add count of risk alleles and the count of risk alleles multiplied by the weight
-snps_for_prs_non_apoe['risk_allele_count'] = snps_for_prs_non_apoe.apply(count_risk_alleles, axis=1)
-snps_for_prs_non_apoe['risk_allele_count'] = snps_for_prs_non_apoe['risk_allele_count'].astype(int)
-snps_for_prs_non_apoe['per_snp_prs_score'] = snps_for_prs_non_apoe['prs_weight'] * snps_for_prs_non_apoe['risk_allele_count']
-
-# add up all the scores
-non_apoe_score = snps_for_prs_non_apoe['per_snp_prs_score'].sum()
-
-# now do the APOE SNPs
-snps_for_prs_apoe = genotype_df[genotype_df['is_apoe_snp']==True]
-apoe_score = get_apoe_snp_score(snps_for_prs_apoe, sample_id)
-final_score = apoe_score + non_apoe_score
-
-# merge the two dataframes for saving to disk for the user
-
-merged_df = snps_for_prs_non_apoe.append(snps_for_prs_apoe, sort=True)
-
-# save to disk
-merged_df[['CHROM',
- 'POS',
- 'REF',
- 'ALT',
- 'snp_id',
- 'gene',
- f'{sample_id}.GT',
- 'risk_allele',
- 'reference_reads',
- 'alt_reads',
- 'qc',
- 'prs_weight',
- 'risk_allele_count',
- 'per_snp_prs_score' ]].to_csv(args.output_name[0] + '_snps_prs.csv', sep='\t', index=False)
-
-# calculate decile
-
-decile, decile_description = get_decile(final_score)
-
-
-# check all snps in merged are pass qc status
-
-unique_qcs = merged_df['qc'].unique()
-
-prs_snps_qc = 'unknown'
-
-if unique_qcs[0] == 'pass' and len(unique_qcs) ==1:
-
-	prs_snps_qc = 'pass'
+	print ('Could not read CSV (no rows)')
 
 else:
 
-	prs_snps_qc = 'fail'
+	# Add annotations
+	genotype_df['snp_id'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'id',))
+	genotype_df['reason'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'reason',))
+	genotype_df['gene'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'gene',))
+	genotype_df['is_prs'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'is_prs',))
+	genotype_df['is_apoe_snp'] = genotype_df.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'is_apoe_snp',))
+	genotype_df['reference_reads'] = genotype_df[f'{sample_id}.NR'] - genotype_df[f'{sample_id}.NV']
+	genotype_df['alt_reads'] = genotype_df[f'{sample_id}.NV']
+	genotype_df['qc'] = genotype_df.apply(check_qc, axis=1,args=(min_depth, min_gq, sample_id))
 
-with open(args.output_name[0] + '_prs_score.csv', mode='w') as prs_score:
+	# Save all SNPs to CSV for viewing by user
+	genotype_df[['CHROM',
+	 'POS',
+	 'REF',
+	 'ALT',
+	 'snp_id',
+	 'gene',
+	  f'{sample_id}.GT',
+	  f'{sample_id}.GQ',
+	  'qc',
+	  'reference_reads',
+	  'alt_reads',
+	  'reason']].to_csv(args.output_name[0] + '_snps.csv', sep='\t', index=False)
 
-	prs_writer = csv.writer(prs_score, delimiter='\t')
-	prs_writer.writerow(['score', 'decile', 'decile_description', 'qc'])
-	prs_writer.writerow([round(final_score,5), decile, decile_description, prs_snps_qc ])
+
+	# get snps for PRS but exclude those in APOE as they are treated differently
+	snps_for_prs_non_apoe = genotype_df[(genotype_df['is_prs']==True) & (genotype_df['is_apoe_snp']==False)]
+
+	# Annotate the prs snps
+	snps_for_prs_non_apoe['risk_allele'] = snps_for_prs_non_apoe.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'risk_allele'))
+	snps_for_prs_non_apoe['prs_weight'] = snps_for_prs_non_apoe.apply(annotate_genotype_df, axis=1, args=(snp_info_dict, 'weight'))
+
+
+	# Add count of risk alleles and the count of risk alleles multiplied by the weight
+	snps_for_prs_non_apoe['risk_allele_count'] = snps_for_prs_non_apoe.apply(count_risk_alleles, axis=1)
+	snps_for_prs_non_apoe['risk_allele_count'] = snps_for_prs_non_apoe['risk_allele_count'].astype(int)
+	snps_for_prs_non_apoe['per_snp_prs_score'] = snps_for_prs_non_apoe['prs_weight'] * snps_for_prs_non_apoe['risk_allele_count']
+
+	# add up all the scores
+	non_apoe_score = snps_for_prs_non_apoe['per_snp_prs_score'].sum()
+
+	# now do the APOE SNPs
+	snps_for_prs_apoe = genotype_df[genotype_df['is_apoe_snp']==True]
+	apoe_score = get_apoe_snp_score(snps_for_prs_apoe, sample_id)
+	final_score = apoe_score + non_apoe_score
+
+	# merge the two dataframes for saving to disk for the user
+
+	merged_df = snps_for_prs_non_apoe.append(snps_for_prs_apoe, sort=True)
+
+	# save to disk
+	merged_df[['CHROM',
+	 'POS',
+	 'REF',
+	 'ALT',
+	 'snp_id',
+	 'gene',
+	 f'{sample_id}.GT',
+	 'risk_allele',
+	 'reference_reads',
+	 'alt_reads',
+	 'qc',
+	 'prs_weight',
+	 'risk_allele_count',
+	 'per_snp_prs_score' ]].to_csv(args.output_name[0] + '_snps_prs.csv', sep='\t', index=False)
+
+	# calculate decile
+
+	decile, decile_description = get_decile(final_score)
+
+
+	# check all snps in merged are pass qc status
+
+	unique_qcs = merged_df['qc'].unique()
+
+	prs_snps_qc = 'unknown'
+
+	if unique_qcs[0] == 'pass' and len(unique_qcs) ==1:
+
+		prs_snps_qc = 'pass'
+
+	else:
+
+		prs_snps_qc = 'fail'
+
+	with open(args.output_name[0] + '_prs_score.csv', mode='w') as prs_score:
+
+		prs_writer = csv.writer(prs_score, delimiter='\t')
+		prs_writer.writerow(['score', 'decile', 'decile_description', 'qc'])
+		prs_writer.writerow([round(final_score,5), decile, decile_description, prs_snps_qc ])
