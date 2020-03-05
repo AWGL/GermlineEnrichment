@@ -101,6 +101,8 @@ def get_apoe_snp_score(snps_for_prs_apoe, sample_id):
 	Calculate the PRS using the APOE SNPs.
 
 	"""
+
+	print(snps_for_prs_apoe[snps_for_prs_apoe['snp_id'] =='rs429358'][f'{sample_id}.GT'])
 	
 	rs429358_gt = snps_for_prs_apoe[snps_for_prs_apoe['snp_id'] =='rs429358'][f'{sample_id}.GT'].iloc[0]
 	
@@ -269,10 +271,9 @@ genotype_df = pd.read_csv(args.genotypes[0], sep='\t')
 # YAML file containing the annotations such as rs number, weights etc.
 snp_info_dict = parse_config(args.annotations[0])
 
+if genotype_df.shape[0] < 20:
 
-if genotype_df.shape[0] == 0:
-
-	print ('Could not read CSV (no rows)')
+	print ('Could not read CSV (expecting more rows)')
 
 else:
 
