@@ -456,8 +456,8 @@ if [ $(echo "$meanOnTargetCoverage" | awk '{if ($1 > 20) print "true"; else prin
     mv manta/results/variants/diploidSV.vcf.gz.tbi "$seqId"_"$sampleId"_sv_filtered.vcf.gz.tbi
 fi
 
-## panel specific analyses
-if [ $panel == "AgilentOGTFH" ]
+## panel specific analyses - polygenic risk score, only for FH, don't run on any samples containing NTC
+if [ $panel == "AgilentOGTFH" ] && [[ $sampleId != *"NTC"* ]]
 then
 
     echo "Running FH specific Analysis"
