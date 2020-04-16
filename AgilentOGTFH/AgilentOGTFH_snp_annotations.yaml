@@ -1,0 +1,261 @@
+11:126243952:
+  gene: ST3GAL4
+  id: rs11220462
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: A
+  weight: 0.05
+11:46761055:
+  gene: F2
+  id: rs1799963
+  is_apoe_snp: false
+  is_prs: false
+  reason: "extremely high levels of Lp(a)\_despite an otherwise normal lipoprotein\
+    \ profile\u2026 treated with antiplatelet therapy and lipoprotein apheresis"
+12:121388962:
+  gene: HNF1A
+  id: rs2650000
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C and TC levels
+12:21283322:
+  gene: SLCO1B1 (Upstream)
+  id: rs4149015
+  is_apoe_snp: false
+  is_prs: false
+  reason: "\_lower peak plasma pravastatin Cmax\_and a greater increase in HDL-C\_"
+12:21329738:
+  gene: SLCO1B1
+  id: rs2306283
+  is_apoe_snp: false
+  is_prs: false
+  reason: "polymorphism influences the low\u2010density lipoprotein cholesterol (LDL\u2010\
+    C)\u2010lowering efficacy with drug rosuvastatin"
+12:21331549:
+  gene: SLCO1B1
+  id: rs4149056
+  is_apoe_snp: false
+  is_prs: false
+  reason: "polymorphism influences the low\u2010density lipoprotein cholesterol (LDL\u2010\
+    C)\u2010lowering efficacy with drug rosuvastatin"
+14:24883887:
+  gene: NYNRIN
+  id: rs8017377
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: A
+  weight: 0.029
+15:45620985:
+  gene: GATM (downstream)
+  id: rs1719247
+  is_apoe_snp: false
+  is_prs: false
+  reason: protective factor for SRM statin-related myopathy
+15:45673029:
+  gene: GATM
+  id: rs1346268
+  is_apoe_snp: false
+  is_prs: false
+  reason: protective factor for SRM statin-related myopathy
+19:11202306:
+  gene: LDLR
+  id: rs6511720
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: G
+  weight: 0.18
+19:19407718:
+  gene: SUGP1
+  id: rs10401969
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C and TC levels
+19:45411941:
+  gene: APOE
+  id: rs429358
+  is_apoe_snp: true
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+19:45412079:
+  gene: APOE
+  id: rs7412
+  is_apoe_snp: true
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+1:109817590:
+  gene: CELSR2
+  id: rs12740374
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C and TC levels
+1:109818306:
+  gene: CELSR2
+  id: rs629301
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: T
+  weight: 0.15
+1:11854476:
+  gene: MTHFR
+  id: rs1801131
+  is_apoe_snp: false
+  is_prs: false
+  reason: involved in atherosclerotic and thrombotic genetic risk
+1:11856378:
+  gene: MTHFR
+  id: rs1801133
+  is_apoe_snp: false
+  is_prs: false
+  reason: involved in atherosclerotic and thrombotic genetic risk
+1:169519049:
+  gene: F5
+  id: rs6025
+  is_apoe_snp: false
+  is_prs: false
+  reason: involved in atherosclerotic and thrombotic genetic risk
+1:173873176:
+  gene: SERPINC1
+  id: rs121909548
+  is_apoe_snp: false
+  is_prs: false
+  reason: Reduced antithrombin III activity, not specified, Antithrombin deficiency
+1:55496039:
+  gene: PCSK9 (Upstream)
+  id: rs11206510
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C level
+1:55504650:
+  gene: PCSK9
+  id: rs2479409
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: G
+  weight: 0.052
+20:39228784:
+  gene: MAFB
+  id: rs6102059
+  is_apoe_snp: false
+  is_prs: false
+  reason: Used for reporting genetic risk score fo hypercholesteremia
+21:28216595:
+  gene: ADAMTS1
+  id: rs428785
+  is_apoe_snp: false
+  is_prs: false
+  reason: "related to cardiovascular disease\_"
+2:21263900:
+  gene: APOB
+  id: rs1367117
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: A
+  weight: 0.1
+2:21286057:
+  gene: APOB (upstream)
+  id: rs515135
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C level
+2:44072576:
+  gene: ABCG8
+  id: rs4299376
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: G
+  weight: 0.071
+2:44073881:
+  gene: ABCG8
+  id: rs6544713
+  is_apoe_snp: false
+  is_prs: false
+  reason: LDL Cholesterol Genetic Risk Score
+4:84192168:
+  gene: COQ2
+  id: rs4693075
+  is_apoe_snp: false
+  is_prs: false
+  reason: Effect on SRM statin related myopaty with drig atorvastatin
+4:89052323:
+  gene: ABCG2
+  id: rs2231142
+  is_apoe_snp: false
+  is_prs: false
+  reason: "polymorphism influences the low\u2010density lipoprotein cholesterol (LDL\u2010\
+    C)\u2010lowering efficacy with drug rosuvastatin"
+5:156398169:
+  gene: TIMD4 (upstream)
+  id: rs1501908
+  is_apoe_snp: false
+  is_prs: false
+  reason: Used for reporting genetic risk score fo hypercholesteremia
+5:74642855:
+  gene: HMGCR
+  id: rs17244841
+  is_apoe_snp: false
+  is_prs: false
+  reason: Association with LDL-C level
+5:74655726:
+  gene: HMGCR
+  id: rs3846663
+  is_apoe_snp: false
+  is_prs: false
+  reason: Used for reporting genetic risk score fo hypercholesteremia
+6:160578860:
+  gene: SLC22A1
+  id: rs1564348
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: T
+  weight: 0.014
+6:160961137:
+  gene: LPA
+  id: rs3798220
+  is_apoe_snp: false
+  is_prs: false
+  reason: susceptibility to familial hypercholesterolemia (high Lp(a) levels observed
+    in one branch of the family were explained primarily by the LPA locus)
+6:161010118:
+  gene: LPA
+  id: rs10455872
+  is_apoe_snp: false
+  is_prs: false
+  reason: "polymorphism influences the low\u2010density lipoprotein cholesterol (LDL\u2010\
+    C)\u2010lowering efficacy with drug rosuvastatin"
+6:16127407:
+  gene: MYLIP
+  id: rs3757354
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: C
+  weight: 0.037
+6:26093141:
+  gene: HFE
+  id: rs1800562
+  is_apoe_snp: false
+  is_prs: true
+  reason: 12-SNP LDL-C gene score calculation
+  risk_allele: G
+  weight: 0.057
+7:100769706:
+  gene: SERPINE1 (upstream)
+  id: rs1799768
+  is_apoe_snp: false
+  is_prs: false
+  reason: "SERPINE1\_has been associated with cardiovascular phenotypes"
+7:87160618:
+  gene: ABCB1
+  id: rs2032582
+  is_apoe_snp: false
+  is_prs: false
+  reason: Variant involved in genes with lipid-lowering efficacy and safety of simvastatin
+    treatment

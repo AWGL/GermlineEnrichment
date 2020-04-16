@@ -9,7 +9,7 @@ cd $PBS_O_WORKDIR
 #Description: Germline Enrichment Pipeline (Illumina paired-end). Not for use with other library preps/ experimental conditions.
 #Author: Matt Lyon, edited by Sara Rey & Christopher Medway, All Wales Medical Genetics Lab
 #Mode: BY_SAMPLE
-version="2.5.5"
+version="2.5.6"
 
 # Script 1 runs in sample folder, requires fastq files split by lane
 
@@ -455,6 +455,67 @@ if [ $(echo "$meanOnTargetCoverage" | awk '{if ($1 > 20) print "true"; else prin
     mv manta/results/variants/diploidSV.vcf.gz "$seqId"_"$sampleId"_sv_filtered.vcf.gz
     mv manta/results/variants/diploidSV.vcf.gz.tbi "$seqId"_"$sampleId"_sv_filtered.vcf.gz.tbi
 fi
+
+## panel specific analyses - polygenic risk score, only for FH, don't run on any samples containing NTC
+if [ $panel == "AgilentOGTFH" ] && [[ $sampleId != *"NTC"* ]]
+then
+
+    echo "Running FH specific Analysis"
+
+    set +u 
+    source /home/transfer/miniconda3/bin/activate fh_genotyping
+
+    # genotype variants with platypus
+
+    platypus callVariants \
+    --refFile=/state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \
+    --bamFiles="$seqId"_"$sampleId".bam \
+    --source=/data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snps.vcf.gz \
+    --getVariantsFromBAMs=0 \
+    --output="$seqId"_"$sampleId"_snps.vcf \
+    --regions=/data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_ROI_b37.bed \
+    --minPosterior=0
+
+    # fix platypus header so we can decompose correctly
+    cat "$seqId"_"$sampleId"_snps.vcf | \
+    sed 's/##FORMAT=<ID=GQ,Number=1/##FORMAT=<ID=GQ,Number=./' | \
+    sed 's/##FORMAT=<ID=NR,Number=./##FORMAT=<ID=NR,Number=A/' | \
+    sed 's/##FORMAT=<ID=NV,Number=./##FORMAT=<ID=NV,Number=A/' > "$seqId"_"$sampleId"_snps_fixed.vcf
+
+    # decompose multiallelic variants
+    cat "$seqId"_"$sampleId"_snps_fixed.vcf | vt decompose -s - > "$seqId"_"$sampleId"_snps_fixed_decomposed.vcf
+
+    # convert to table with gatk
+    gatk VariantsToTable \
+    -V "$seqId"_"$sampleId"_snps_fixed_decomposed.vcf \
+    -O "$seqId"_"$sampleId"_snps_fixed_decomposed.csv \
+    -F CHROM -F POS -F REF -F ALT -F ID -GF GT -GF NR -GF NV -GF GQ \
+    --show-filtered true
+
+    source /home/transfer/miniconda3/bin/deactivate
+
+    source /home/transfer/miniconda3/bin/activate fh_prs
+
+    python /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/fh_calculate_prs.py \
+    --genotypes "$seqId"_"$sampleId"_snps_fixed_decomposed.csv \
+    --annotations /data/diagnostics/pipelines/GermlineEnrichment/GermlineEnrichment-"$version"/"$panel"/"$panel"_snp_annotations.yaml \
+    --output_name "$seqId"_"$sampleId" \
+    --sample_id "$sampleId"
+
+    source /home/transfer/miniconda3/bin/deactivate
+    set -u 
+
+    # clean up
+    rm "$seqId"_"$sampleId"_snps_fixed.vcf
+    rm "$seqId"_"$sampleId"_snps.vcf
+    rm "$seqId"_"$sampleId"_snps_fixed_decomposed.csv 
+
+fi
+
+
+
+
+
 
 ### Clean up ###
 

@@ -1,0 +1,7 @@
+name: fh_genotyping
+channels:
+- bioconda
+dependencies:
+- platypus-variant = 0.8.1.2
+- vt = 2015.11.10
+- gatk4 = 4.1.4.1

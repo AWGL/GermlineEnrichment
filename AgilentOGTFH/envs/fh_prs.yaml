@@ -1,0 +1,8 @@
+name: fh_prs
+channels:
+- bioconda
+dependencies:
+- python = 3.7
+- pip:
+  - pandas == 0.23.4
+  - pyyaml
